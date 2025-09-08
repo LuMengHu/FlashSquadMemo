@@ -1,97 +1,81 @@
-// app/team/login/page.tsx
+// app/team/page.tsx
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // 用于页面跳转
-import Cookies from 'js-cookie'; // 用于操作 Cookie
+import { useEffect, useState } from 'react';
+import { UserIcon } from '@heroicons/react/24/solid';
 
-export default function TeamLoginPage() {
-  const router = useRouter();
-  
-  // 表单状态
-  const [teamName, setTeamName] = useState('');
-  const [password, setPassword] = useState('');
-  
-  // UI 状态
-  const [isLoading, setIsLoading] = useState(false); // 防止重复提交
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+// 定义更精确的类型，以匹配后端返回的新数据结构
+interface QuestionBank {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setIsLoading(true);
+interface Member {
+  id: string;
+  name: string;
+  teamId: string;
+  assignedQuestionBankId: string | null;
+  createdAt: string;
+  assignedQuestionBank: QuestionBank | null; // <-- 新增！这里是完整的题库对象
+}
 
-    try {
-      // 1. 发送请求到我们的 API
-      const response = await fetch('/api/auth/team/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ teamName, password }),
-      });
 
-      // 2. 解析返回的 JSON 数据
-      const data = await response.json();
+export default function TeamPage() {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-      // 3. 处理 API 返回的错误
-      if (!response.ok) {
-        // 如果响应状态不是 2xx, 抛出错误，错误信息来自后端
-        throw new Error(data.error || '登录时发生未知错误');
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/team');
+        if (!response.ok) {
+          throw new Error('Failed to fetch team members');
+        }
+        const data: Member[] = await response.json();
+        setMembers(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // 4. 处理成功逻辑
-      setSuccess('登录成功！正在跳转...');
-      
-      // 将 token 存储到 Cookie 中，有效期为 7 天
-      Cookies.set('token', data.token, { expires: 7, path: '/' });
+    fetchMembers();
+  }, []);
 
-      // 延迟 1 秒后跳转到成员选择页面
-      setTimeout(() => {
-        router.push('/'); // 暂时先跳转到首页，下一步我们再创建成员选择页
-      }, 1000);
-
-    } catch (err: any) {
-      // 5. 捕获并显示任何发生的错误
-      setError(err.message);
-    } finally {
-      // 6. 无论成功或失败，最后都结束加载状态
-      setIsLoading(false);
-    }
-  };
+  if (loading) return <p className="text-center mt-8">Loading members...</p>;
+  if (error) return <p className="text-center mt-8 text-red-500">Error: {error}</p>;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-      <div className="w-full max-w-md rounded-lg bg-gray-800 p-8 shadow-lg">
-        <h1 className="mb-6 text-center text-3xl font-bold">战队登录</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* ... 输入框部分代码和之前完全一样，这里省略以便聚焦 ... */}
-          <div>
-            <label htmlFor="teamName" className="block text-sm font-medium text-gray-300">战队名称</label>
-            <input id="teamName" name="teamName" type="text" required value={teamName} onChange={(e) => setTeamName(e.target.value)} className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500" placeholder="请输入战队名称" />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300">密码</label>
-            <input id="password" name="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500" placeholder="请输入密码" />
-          </div>
-          
-          {/* 状态信息显示区域 */}
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-          {success && <p className="text-sm text-green-500 text-center">{success}</p>}
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-10">
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-bold text-gray-800">欢迎, !</h1>
+        <p className="text-lg text-gray-600 mt-2">请选择一位成员, 开始背题挑战。</p>
+      </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading} // 当正在加载时，禁用按钮
-              className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? '登录中...' : '登录'}
-            </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+        {members.map((member) => (
+          <div 
+            key={member.id} 
+            className="bg-white rounded-lg shadow-md p-6 w-72 text-center hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
+          >
+            <div className="flex justify-center mb-4">
+              <UserIcon className="h-16 w-16 text-indigo-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">{member.name}</h2>
+            
+            {/* 核心改动在这里 */}
+            <p className="text-gray-500 mt-2 text-sm">
+              负责题库: {member.assignedQuestionBank?.name || '未分配'}
+            </p>
+            
           </div>
-        </form>
+        ))}
       </div>
     </div>
   );
