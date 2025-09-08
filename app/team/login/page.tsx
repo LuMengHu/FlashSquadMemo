@@ -1,81 +1,123 @@
-// app/team/page.tsx
+'use client';
 
-"use client";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { useEffect, useState } from 'react';
-import { UserIcon } from '@heroicons/react/24/solid';
-
-// 定义更精确的类型，以匹配后端返回的新数据结构
-interface QuestionBank {
-  id: string;
-  name: string;
-  description: string | null;
-  createdAt: string;
+interface MemberSeat {
+  memberId: string;
+  assignedQuestionBank: {
+    id: string;
+    name: string;
+  };
 }
 
-interface Member {
-  id: string;
-  name: string;
-  teamId: string;
-  assignedQuestionBankId: string | null;
-  createdAt: string;
-  assignedQuestionBank: QuestionBank | null; // <-- 新增！这里是完整的题库对象
-}
-
-
-export default function TeamPage() {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function LoginPage() {
+  const router = useRouter();
+  const [teamName, setTeamName] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/team');
-        if (!response.ok) {
-          throw new Error('Failed to fetch team members');
-        }
-        const data: Member[] = await response.json();
-        setMembers(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setLoading(false);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/auth/team/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamName, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed. Please try again.');
       }
-    };
 
-    fetchMembers();
-  }, []);
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('teamInfo', JSON.stringify({ id: data.team.id, name: data.team.name }));
+      localStorage.setItem('memberSeats', JSON.stringify(data.members));
 
-  if (loading) return <p className="text-center mt-8">Loading members...</p>;
-  if (error) return <p className="text-center mt-8 text-red-500">Error: {error}</p>;
+      router.push('/team/select-seat');
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-10">
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-gray-800">欢迎, !</h1>
-        <p className="text-lg text-gray-600 mt-2">请选择一位成员, 开始背题挑战。</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
-        {members.map((member) => (
-          <div 
-            key={member.id} 
-            className="bg-white rounded-lg shadow-md p-6 w-72 text-center hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
-          >
-            <div className="flex justify-center mb-4">
-              <UserIcon className="h-16 w-16 text-indigo-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">{member.name}</h2>
-            
-            {/* 核心改动在这里 */}
-            <p className="text-gray-500 mt-2 text-sm">
-              负责题库: {member.assignedQuestionBank?.name || '未分配'}
-            </p>
-            
+    // UI Change: 更柔和的背景色
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      {/* UI Change: 增加圆角和阴影 */}
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
+        <h2 className="text-3xl font-bold text-center text-gray-900">
+          团队登录
+        </h2>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <label
+              htmlFor="teamName"
+              className="block text-sm font-medium text-gray-700"
+            >
+              团队名称
+            </label>
+            <input
+              id="teamName"
+              name="teamName"
+              type="text"
+              required
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              // UI Change: 增加圆角、调整边框和文字颜色
+              className="block w-full px-4 py-3 mt-1 text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="例如：雷火队"
+            />
           </div>
-        ))}
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              团队密码
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              // UI Change: 统一输入框样式
+              className="block w-full px-4 py-3 mt-1 text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="例如：password123"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 text-sm font-semibold text-red-800 bg-red-100 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <div>
+            {/* UI Change: 调整按钮样式，增加过渡效果 */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex justify-center w-full px-4 py-3 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 transition-colors duration-200"
+            >
+              {isLoading ? '登录中...' : '登 录'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

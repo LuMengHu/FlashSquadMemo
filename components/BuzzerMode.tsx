@@ -2,7 +2,7 @@
 'use client';
 // (逻辑代码部分保持不变, 仅更新UI渲染部分)
 import { useState, useEffect, useRef } from 'react';
-import type { Question } from '@/app/lib/questionBanks';
+import type { Question } from '@/types/question';
 
 const ArrowPathIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201-4.42 5.5 5.5 0 011.663-1.44l-.805.805a.75.75 0 01-1.06-1.06l1.5-1.5a.75.75 0 011.06 0l1.5 1.5a.75.75 0 11-1.06 1.06l-.805-.805a4 4 0 00-1.22 3.224 4 4 0 006.682 2.825.75.75 0 11.962 1.13-5.5 5.5 0 01-9.201-4.42z" clipRule="evenodd" /><path fillRule="evenodd" d="M4.688 8.576a5.5 5.5 0 019.201 4.42 5.5 5.5 0 01-1.663 1.44l.805-.805a.75.75 0 111.06 1.06l-1.5 1.5a.75.75 0 01-1.06 0l-1.5-1.5a.75.75 0 011.06-1.06l.805.805a4 4 0 001.22-3.224 4 4 0 00-6.682-2.825.75.75 0 11-.962-1.13 5.5 5.5 0 019.201 4.42z" clipRule="evenodd" /></svg>
@@ -19,8 +19,8 @@ export default function BuzzerMode({ questions: allQuestions }: BuzzerModeProps)
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => { setRemainingQuestions([...allQuestions]); setGameState('idle'); }, [allQuestions]);
   const handleNextQuestion = () => { if (remainingQuestions.length === 0) { setGameState('finished'); setCurrentQuestion(null); return; } const randomIndex = Math.floor(Math.random() * remainingQuestions.length); const nextQuestion = remainingQuestions[randomIndex]; setCurrentQuestion(nextQuestion); setRemainingQuestions(prev => prev.filter(q => q.id !== nextQuestion.id)); setDisplayedQuestionText(''); setGameState('displaying'); };
-  const handleBuzzer = () => { if (gameState === 'displaying' && currentQuestion) { if (intervalRef.current) clearInterval(intervalRef.current); setDisplayedQuestionText(currentQuestion.question); setGameState('answered'); } };
-  useEffect(() => { if (gameState === 'displaying' && currentQuestion) { if (intervalRef.current) clearInterval(intervalRef.current); intervalRef.current = setInterval(() => { setDisplayedQuestionText(prev => { if (prev.length >= currentQuestion.question.length) { if (intervalRef.current) clearInterval(intervalRef.current); setGameState('answered'); return prev; } return currentQuestion.question.substring(0, prev.length + 1); }); }, 150); } return () => { if (intervalRef.current) clearInterval(intervalRef.current); }; }, [gameState, currentQuestion]);
+  const handleBuzzer = () => { if (gameState === 'displaying' && currentQuestion) { if (intervalRef.current) clearInterval(intervalRef.current); setDisplayedQuestionText(currentQuestion.content); setGameState('answered'); } };
+  useEffect(() => { if (gameState === 'displaying' && currentQuestion) { if (intervalRef.current) clearInterval(intervalRef.current); intervalRef.current = setInterval(() => { setDisplayedQuestionText(prev => { if (prev.length >= currentQuestion.content.length) { if (intervalRef.current) clearInterval(intervalRef.current); setGameState('answered'); return prev; } return currentQuestion.content.substring(0, prev.length + 1); }); }, 150); } return () => { if (intervalRef.current) clearInterval(intervalRef.current); }; }, [gameState, currentQuestion]);
   const handleReset = () => { setRemainingQuestions([...allQuestions]); setCurrentQuestion(null); setDisplayedQuestionText(''); setGameState('idle'); };
   
   // --- 全新的 UI 渲染部分 ---

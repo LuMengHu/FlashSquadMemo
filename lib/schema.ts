@@ -84,6 +84,7 @@ export const memberQuestionProgress = pgTable('member_question_progress', {
   nextReviewAt: timestamp('next_review_at'),   // 下次应复习时间
   interval: integer('interval').default(0),      // 复习间隔天数
   easeFactor: real('ease_factor').default(2.5),  // 熟悉度因子 (SM-2算法)
+  correctStreak: integer('correct_streak').default(0).notNull(), 
 
 }, (table) => {
   // 设置 memberId 和 questionId 的复合主键，确保唯一性
