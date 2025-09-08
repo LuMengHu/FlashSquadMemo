@@ -4,10 +4,16 @@ import { questions, memberQuestionProgress } from '@/lib/schema';
 import { verifyAuth } from '@/lib/auth';
 import { and, eq, or, lte, inArray } from 'drizzle-orm';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { quizId: string } }
-) {
+// ===== 核心修正：修改第二个参数的类型定义 =====
+interface RouteParams {
+  params: {
+    quizId: string;
+  };
+}
+
+export async function GET(req: NextRequest, { params }: RouteParams) {
+// ===============================================
+
   const authResult = await verifyAuth(req);
   if (!authResult.team) {
     return NextResponse.json({ error: `认证失败: ${authResult.error}` }, { status: 401 });
@@ -26,17 +32,14 @@ export async function GET(
     let questionList: { id: string; content: string; answer: string; }[] = [];
 
     if (mode === 'review') {
-      // ===== 核心修正：增加一个明确的类型守卫 =====
       if (!memberId) {
         return NextResponse.json({ error: '复习模式需要成员ID (memberId)。' }, { status: 400 });
       }
-      // 在这个 if 块之后，TypeScript 就知道 memberId 一定是个 string
-      // =============================================
       
       const now = new Date();
       const progressRecordsToReview = await db.query.memberQuestionProgress.findMany({
           where: and(
-              eq(memberQuestionProgress.memberId, memberId), // <--- 现在这里是安全的
+              eq(memberQuestionProgress.memberId, memberId),
               or(
                   eq(memberQuestionProgress.status, 'incorrect'),
                   lte(memberQuestionProgress.nextReviewAt, now)
@@ -59,7 +62,6 @@ export async function GET(
           columns: { id: true, content: true, answer: true }
       });
     } else {
-      // 'all' 模式逻辑
       questionList = await db.query.questions.findMany({
         where: eq(questions.questionBankId, quizId),
         columns: {
