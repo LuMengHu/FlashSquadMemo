@@ -1,126 +1,75 @@
-import * as schema from '@/lib/schema'; // 导入所有 schema 定义
-import { teams, members, questionBanks, questions, memberQuestionProgress } from '@/lib/schema';
-import bcrypt from 'bcryptjs';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
-import 'dotenv/config'; // 确保可以加载 .env 文件
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { questions, memberQuestionProgress } from '@/lib/schema';
+import { verifyAuth } from '@/lib/auth';
+import { and, eq, or, lte, inArray } from 'drizzle-orm';
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error("DATABASE_URL is not set");
-
-const sql = neon(databaseUrl);
-
-// ===== 核心修正：将 schema 注入到 drizzle 实例中 =====
-const dbForSeed = drizzle(sql, { schema });
-// ========================================================
-
-// ===== 在这里定义你的题库、题目和团队 =====
-const SEED_TEAMS = ['雷火队', '闪电队'];
-const SEED_QUESTION_BANKS = [
-  {
-    name: '题库A：历史与文化',
-    description: '涵盖中国古代历史及传统文化知识。',
-    questions: [
-      { content: '中国的四大发明是什么？', answer: '造纸术、印刷术、指南针、火药' },
-      { content: '唐朝的开国皇帝是谁？', answer: '李渊（唐高祖）' },
-    ]
-  },
-  {
-    name: '题库B：地理与自然',
-    description: '关于中国地理风貌和自然知识的题目。',
-    questions: [
-      { content: '中国的最长的河流是什么？', answer: '长江' },
-    ]
-  },
-  {
-    name: '题库C：科技与生活',
-    description: '现代科技常识及生活小知识。',
-    questions: [
-      { content: 'HTTP协议的全称是什么？', answer: '超文本传输协议' },
-    ]
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { quizId: string } } // <-- Next.js 14 中这种写法是完全正确的
+) {
+  const authResult = await verifyAuth(req);
+  if (!authResult.team) {
+    return NextResponse.json({ error: `认证失败: ${authResult.error}` }, { status: 401 });
   }
-];
-// ============================================
+  
+  const { quizId } = params;
+  // ... 剩余的所有逻辑代码保持不变 ...
+  const { searchParams } = new URL(req.url);
+  const mode = searchParams.get('mode') || 'all';
+  const memberId = searchParams.get('memberId');
 
-async function main() {
-  console.log('🌱 开始填充种子数据...');
-
-  // 1. 清理旧数据 (顺序很重要)
-  console.log('🗑️  正在清理旧数据...');
-  await dbForSeed.delete(memberQuestionProgress);
-  await dbForSeed.delete(questions);
-  await dbForSeed.delete(members);
-  await dbForSeed.delete(questionBanks);
-  await dbForSeed.delete(teams);
-  console.log('✅ 清理完成');
-
-  // 2. 创建团队
-  console.log('🧑‍🤝‍🧑 正在创建测试团队...');
-  const password = 'password123';
-  const passwordHash = await bcrypt.hash(password, 10);
-  const createdTeams = await dbForSeed.insert(teams).values(
-    SEED_TEAMS.map(name => ({ name, passwordHash }))
-  ).returning();
-  console.log(`✅ 成功创建 ${createdTeams.length} 个测试团队。默认密码是: ${password}`);
-
-  // 3. 创建题库和题目
-  console.log('🏦 正在创建题库和题目...');
-  const createdBanks = [];
-  for (const bankData of SEED_QUESTION_BANKS) {
-    const [insertedBank] = await dbForSeed.insert(questionBanks).values({
-      name: bankData.name,
-      description: bankData.description,
-    }).returning();
-    
-    if (bankData.questions.length > 0) {
-      await dbForSeed.insert(questions).values(
-        bankData.questions.map(q => ({
-          content: q.content,
-          answer: q.answer,
-          questionBankId: insertedBank.id,
-        }))
-      );
-    }
-    createdBanks.push(insertedBank);
+  if (!quizId) {
+    return NextResponse.json({ error: '题库ID (quizId) 缺失。' }, { status: 400 });
   }
-  console.log(`✅ 成功创建 ${createdBanks.length} 个题库及其题目。`);
 
-  // 4. 为每个团队创建3个成员，并分配题库
-  console.log('👤 正在创建成员并分配席位...');
-  for (const team of createdTeams) {
-    for (let i = 0; i < createdBanks.length; i++) {
-      const bank = createdBanks[i];
-      const memberName = `席位-${i + 1} (${bank.name.substring(0, 4)})`;
+  try {
+    let questionList: { id: string; content: string; answer: string; }[] = [];
+
+    if (mode === 'review') {
+      if (!memberId) {
+        return NextResponse.json({ error: '复习模式需要成员ID (memberId)。' }, { status: 400 });
+      }
       
-      const [createdMember] = await dbForSeed.insert(members).values({
-        teamId: team.id,
-        assignedQuestionBankId: bank.id,
-        name: memberName,
-      }).returning();
-      
-      // 5. 为新创建的成员初始化所有对应题目的进度
-      // ---- 这里使用了 db.query，所以 dbForSeed 必须知道 schema ----
-      const bankQuestions = await dbForSeed.query.questions.findMany({
-          where: (questions, { eq }) => eq(questions.questionBankId, bank.id)
+      const now = new Date();
+      const progressRecordsToReview = await db.query.memberQuestionProgress.findMany({
+          where: and(
+              eq(memberQuestionProgress.memberId, memberId),
+              or(
+                  eq(memberQuestionProgress.status, 'incorrect'),
+                  lte(memberQuestionProgress.nextReviewAt, now)
+              )
+          ),
+          columns: { questionId: true }
       });
       
-      if (bankQuestions.length > 0) {
-        await dbForSeed.insert(memberQuestionProgress).values(
-          bankQuestions.map(q => ({
-            memberId: createdMember.id,
-            questionId: q.id,
-            // 我们可以在这里初始化 correctStreak
-            correctStreak: 0,
-          }))
-        );
+      if (progressRecordsToReview.length === 0) {
+          return NextResponse.json([]);
       }
-    }
-  }
-  console.log('✅ 成员和学习进度初始化完成。');
-  console.log('🎉 种子数据填充完成！');
-}
 
-main().catch((err) => {
-  console.error('❌ 填充种子数据时发生错误:', err);
-  process.exit(1);
-});
+      const questionIdsToReview = progressRecordsToReview.map(p => p.questionId);
+
+      questionList = await db.query.questions.findMany({
+          where: (questions, { and, eq, inArray }) => and(
+              eq(questions.questionBankId, quizId),
+              inArray(questions.id, questionIdsToReview)
+          ),
+          columns: { id: true, content: true, answer: true }
+      });
+    } else {
+      questionList = await db.query.questions.findMany({
+        where: eq(questions.questionBankId, quizId),
+        columns: {
+          id: true,
+          content: true,
+          answer: true,
+        },
+      });
+    }
+    
+    return NextResponse.json(questionList);
+  } catch (error) {
+    console.error(`获取题目 API 错误 (mode: ${mode}):`, error);
+    return NextResponse.json({ error: '服务器内部错误。' }, { status: 500 });
+  }
+}
