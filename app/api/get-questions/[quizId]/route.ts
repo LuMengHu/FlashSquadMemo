@@ -4,22 +4,19 @@ import { questions, memberQuestionProgress } from '@/lib/schema';
 import { verifyAuth } from '@/lib/auth';
 import { and, eq, or, lte, inArray } from 'drizzle-orm';
 
-// ===== 核心修正：修改第二个参数的类型定义 =====
-interface RouteParams {
-  params: {
-    quizId: string;
-  };
-}
-
-export async function GET(req: NextRequest, { params }: RouteParams) {
-// ===============================================
+// ===== 核心修正：移除所有自定义类型，使用最基础的函数签名 =====
+export async function GET(req: NextRequest, context: { params: { quizId: string } }) {
+// =============================================================
 
   const authResult = await verifyAuth(req);
   if (!authResult.team) {
     return NextResponse.json({ error: `认证失败: ${authResult.error}` }, { status: 401 });
   }
   
+  // 从 context 中解构 params
+  const { params } = context;
   const { quizId } = params;
+
   const { searchParams } = new URL(req.url);
   const mode = searchParams.get('mode') || 'all';
   const memberId = searchParams.get('memberId');
