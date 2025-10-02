@@ -1,4 +1,4 @@
-// 这个文件将作为我们前端所有“题目”相关类型的唯一来源
+// 这个文件将作为我们前端所有“题目”相关类型的d唯0一来源 
 
 export interface Question {
   id: string; // 注意：我们的数据库 schema 使用的是 uuid (string)
