@@ -30,7 +30,9 @@ export const questionBanks = pgTable('question_banks', {
     .notNull(),
   name: varchar('name', { length: 256 }).notNull(),
   description: text('description'),
+  mode: text('mode', { enum: ['standard', 'poetry-pair'] }).default('standard').notNull(), 
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // 3. 题目表 (Questions)

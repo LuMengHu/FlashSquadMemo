@@ -1,7 +1,7 @@
-// app/api/get-questions/[quizId]/route.ts (完整替换)
+// app/api/get-questions/[quizId]/route.ts (最终解决方案)
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { questions, memberQuestionProgress } from '@/lib/schema';
+import { questionBanks, questions, memberQuestionProgress } from '@/lib/schema';
 import { verifyAuth } from '@/lib/auth';
 import { and, eq, or, lte } from 'drizzle-orm';
 import { z } from 'zod';
@@ -35,46 +35,47 @@ export async function GET(
   const { quizId, memberId, mode } = validation.data;
 
   try {
-    let query;
+    const bank = await db.query.questionBanks.findFirst({
+      columns: { mode: true },
+      where: eq(questionBanks.id, quizId),
+    });
+
+    if (!bank) {
+      return NextResponse.json({ error: '题库未找到' }, { status: 404 });
+    }
+
+    let questionList;
 
     if (mode === 'all') {
-      // 获取全部题目的逻辑保持不变
-      query = db.select({
-          id: questions.id,
-          content: questions.content,
-          answer: questions.answer
-        })
-        .from(questions)
-        .where(eq(questions.questionBankId, quizId));
+      // "all" 模式的查询很简单，保持不变
+      questionList = await db.query.questions.findMany({
+        where: eq(questions.questionBankId, quizId),
+      });
         
     } else { // mode === 'review'
-      
-      // [核心修正] 这里是获取复习题目的新逻辑
-      query = db.select({
-          id: questions.id,
-          content: questions.content,
-          answer: questions.answer,
-        })
+      // [核心修正] 使用更稳健的查询和映射方法
+      const joinedResult = await db.select() // 1. 直接 select() 获取两个完整的表对象
         .from(questions)
         .innerJoin(memberQuestionProgress, eq(questions.id, memberQuestionProgress.questionId))
         .where(
           and(
             eq(memberQuestionProgress.memberId, memberId),
-            // [关键] 使用 or 操作符，满足以下任一条件即可：
             or(
-              // 1. 状态是 'incorrect' (答错了)
               eq(memberQuestionProgress.status, 'incorrect'),
-              // 2. 状态是 'unanswered' (从未答过也算需要学习)
               eq(memberQuestionProgress.status, 'unanswered'),
-              // 3. 下次复习时间已到或已过
               lte(memberQuestionProgress.nextReviewAt, new Date())
             )
           )
         );
+      
+      // 2. 使用 map 从结果中提取出 questions 对象
+      questionList = joinedResult.map(row => row.questions);
     }
 
-    const result = await query;
-    return NextResponse.json(result);
+    return NextResponse.json({
+      mode: bank.mode,
+      questions: questionList,
+    });
 
   } catch (error) {
     console.error(`Get questions API error (mode: ${mode}):`, error);

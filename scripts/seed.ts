@@ -10,7 +10,7 @@ import path from 'path';
 
 // 类型定义
 type TeamSeed = { key: string; name: string; password: string; };
-type QuestionBankSeed = { teamKey: string; key: string; name: string; description: string; };
+type QuestionBankSeed = { teamKey: string; key: string; name: string; description: string; mode?: 'standard' | 'poetry-pair'; };
 type QuestionSeed = { bankKey: string; content: string; answer: string; };
 
 // 数据库连接
@@ -52,8 +52,14 @@ async function main() {
     // B. 创建该团队的题库
     const teamBanksSeed = banksData.filter(b => b.teamKey === teamSeed.key);
     if (teamBanksSeed.length === 0) continue;
-    const banksToInsert = teamBanksSeed.map(b => ({ teamId: createdTeam.id, name: b.name, description: b.description }));
-    const createdBanks = await dbForSeed.insert(questionBanks).values(banksToInsert).returning();
+    const banksToInsert = teamBanksSeed.map(b => ({
+    teamId: createdTeam.id,
+    name: b.name,
+    description: b.description,
+    mode: b.mode || 'standard', // 如果 JSON 中没有提供 mode，则默认为 'standard'
+  }));
+  
+  const createdBanks = await dbForSeed.insert(questionBanks).values(banksToInsert).returning();
     console.log(`    -> Created ${createdBanks.length} question banks for ${createdTeam.name}`);
 
     // C. 创建这些题库的题目

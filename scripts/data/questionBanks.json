@@ -2,20 +2,27 @@
 [
   {
     "teamKey": "team-smoke-control",
-    "key": "bank-a",
-    "name": "1-200",
+    "key": "bank-smoke-control-1",
+    "name": "控烟题库 (1-200)",
     "description": "胡骏韬"
   },
   {
     "teamKey": "team-smoke-control",
-    "key": "bank-b",
-    "name": "200-400",
+    "key": "bank-smoke-control-2",
+    "name": "控烟题库 (200-400)",
     "description": "霍慧栭"
   },
   {
     "teamKey": "team-smoke-control",
-    "key": "bank-c",
-    "name": "400-600",
+    "key": "bank-smoke-control-3",
+    "name": "控烟题库 (400-600)",
     "description": "侯佳怡"
+  },
+  {
+    "teamKey": "team-sc-control",
+    "key": "bank-poetry-familiarize",
+    "name": "诗词配对练习",
+    "description": "诗词上下句配对练习。",
+    "mode": "poetry-pair"
   }
 ]

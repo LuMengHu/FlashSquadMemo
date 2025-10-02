@@ -1,43 +1,102 @@
 
 [
   {
-    "bankKey": "bank-a",
+    "bankKey": "bank-smoke-control-1",
     "content": "《论语》是哪个学派的经典著作？",
     "answer": "儒家"
   },
   {
-    "bankKey": "bank-a",
+    "bankKey": "bank-smoke-control-1",
     "content": "中国四大发明中的“活字印刷术”是谁发明的？",
     "answer": "毕昇"
   },
   {
-    "bankKey": "bank-a",
+    "bankKey": "bank-smoke-control-1",
     "content": "“丝绸之路”是在哪个朝代开辟的？",
     "answer": "西汉"
   },
   {
-    "bankKey": "bank-b",
-    "content": "构成物质的基本单位是什么？",
-    "answer": "原子"
+    "bankKey": "bank-poetry-familiarize",
+    "content": "海内存知己",
+    "answer": "天涯若比邻",
+    "metadata": { "title": "送杜少府之任蜀州", "author": "王勃" }
   },
   {
-    "bankKey": "bank-b",
-    "content": "光在真空中的传播速度大约是多少？",
-    "answer": "约30万公里/秒"
+    "bankKey": "bank-poetry-familiarize",
+    "content": "举头望明月",
+    "answer": "低头思故乡",
+    "metadata": { "title": "静夜思", "author": "李白" }
   },
   {
-    "bankKey": "bank-b",
-    "content": "元素周期表是谁创造的？",
-    "answer": "德米特里·门捷列夫"
+    "bankKey": "bank-poetry-familiarize",
+    "content": "春眠不觉晓",
+    "answer": "处处闻啼鸟",
+    "metadata": { "title": "春晓", "author": "孟浩然" }
   },
   {
-    "bankKey": "bank-c",
-    "content": "“人工智能”的英文缩写是什么？",
-    "answer": "AI (Artificial Intelligence)"
+    "bankKey": "bank-poetry-familiarize",
+    "content": "野火烧不尽",
+    "answer": "春风吹又生",
+    "metadata": { "title": "赋得古原草送别", "author": "白居易" }
   },
   {
-    "bankKey": "bank-c",
-    "content": "什么是“量子霸权”？",
-    "answer": "指量子计算机在特定问题上的计算能力超越了最强大的传统超级计算机。"
+    "bankKey": "bank-poetry-familiarize",
+    "content": "但愿人长久",
+    "answer": "千里共婵娟",
+    "metadata": { "title": "水调歌头·明月几时有", "author": "苏轼" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "海上生明月",
+    "answer": "天涯共此时",
+    "metadata": { "title": "望月怀远", "author": "张九龄" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "人生自古谁无死",
+    "answer": "留取丹心照汗青",
+    "metadata": { "title": "过零丁洋", "author": "文天祥" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "两情若是久长时",
+    "answer": "又岂在朝朝暮暮",
+    "metadata": { "title": "鹊桥仙·纤云弄巧", "author": "秦观" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "落霞与孤鹜齐飞",
+    "answer": "秋水共长天一色",
+    "metadata": { "title": "滕王阁序", "author": "王勃" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "无可奈何花落去",
+    "answer": "似曾相识燕归来",
+    "metadata": { "title": "浣溪沙·一曲新词酒一杯", "author": "晏殊" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "人面不知何处去",
+    "answer": "桃花依旧笑春风",
+    "metadata": { "title": "题都城南庄", "author": "崔护" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "山重水复疑无路",
+    "answer": "柳暗花明又一村",
+    "metadata": { "title": "游山西村", "author": "陆游" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "曾经沧海难为水",
+    "answer": "除却巫山不是云",
+    "metadata": { "title": "离思五首·其四", "author": "元稹" }
+  },
+  {
+    "bankKey": "bank-poetry-familiarize",
+    "content": "心有灵犀一点通",
+    "answer": "身无彩凤双飞翼",
+    "metadata": { "title": "无题·昨夜星辰昨夜风", "author": "李商隐" }
   }
 ]
