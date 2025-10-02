@@ -8,8 +8,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "智能背题网站", // 你可以自定义网站标题
-  description: "一个帮助你高效记忆题库的网站", // 你可以自定义网站描述
+  title: "Flash Quad Memo", // 你可以自定义网站标题
+  description: "一个帮助团队高效记忆题库的网站", // 你可以自定义网站描述
 };
 
 export default function RootLayout({

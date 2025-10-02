@@ -1,32 +1,43 @@
+
 [
   {
     "bankKey": "bank-a",
-    "content": "唐朝的开国皇帝是谁？",
-    "answer": "李渊"
+    "content": "《论语》是哪个学派的经典著作？",
+    "answer": "儒家"
   },
   {
     "bankKey": "bank-a",
-    "content": "《清明上河图》描绘的是哪个朝代的都城景象？",
-    "answer": "北宋"
+    "content": "中国四大发明中的“活字印刷术”是谁发明的？",
+    "answer": "毕昇"
+  },
+  {
+    "bankKey": "bank-a",
+    "content": "“丝绸之路”是在哪个朝代开辟的？",
+    "answer": "西汉"
   },
   {
     "bankKey": "bank-b",
-    "content": "水的化学式是什么？",
-    "answer": "H₂O"
+    "content": "构成物质的基本单位是什么？",
+    "answer": "原子"
   },
   {
     "bankKey": "bank-b",
-    "content": "地球上最坚硬的天然物质是什么？",
-    "answer": "钻石"
+    "content": "光在真空中的传播速度大约是多少？",
+    "answer": "约30万公里/秒"
+  },
+  {
+    "bankKey": "bank-b",
+    "content": "元素周期表是谁创造的？",
+    "answer": "德米特里·门捷列夫"
   },
   {
     "bankKey": "bank-c",
-    "content": "《百年孤独》的作者是谁？",
-    "answer": "加夫列尔·加西亚·马尔克斯"
+    "content": "“人工智能”的英文缩写是什么？",
+    "answer": "AI (Artificial Intelligence)"
   },
   {
     "bankKey": "bank-c",
-    "content": "名画《蒙娜丽莎》是谁的作品？",
-    "answer": "列奥纳多·达·芬奇"
+    "content": "什么是“量子霸权”？",
+    "answer": "指量子计算机在特定问题上的计算能力超越了最强大的传统超级计算机。"
   }
 ]

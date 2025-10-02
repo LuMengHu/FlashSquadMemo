@@ -1,15 +1,19 @@
+
 [
   {
+    "teamKey": "team-smoke-control",
     "key": "bank-a",
     "name": "1-200",
     "description": "胡骏韬"
   },
   {
+    "teamKey": "team-smoke-control",
     "key": "bank-b",
     "name": "200-400",
     "description": "霍慧栭"
   },
   {
+    "teamKey": "team-smoke-control",
     "key": "bank-c",
     "name": "400-600",
     "description": "侯佳怡"

@@ -25,6 +25,9 @@ export const teams = pgTable('teams', {
 // 2. 题库表 (Question Banks)
 export const questionBanks = pgTable('question_banks', {
   id: uuid('id').defaultRandom().primaryKey(),
+  teamId: uuid('team_id')
+    .references(() => teams.id, { onDelete: 'cascade' })
+    .notNull(),
   name: varchar('name', { length: 256 }).notNull(),
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

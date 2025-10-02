@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const token = await new SignJWT({ teamId: team.id, teamName: team.name })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('1d') // token 有效期 1 天
+      .setExpirationTime('1y') // token 有效期 1 天
       .sign(getJwtSecretKey());
 
     // 5. 返回成功响应

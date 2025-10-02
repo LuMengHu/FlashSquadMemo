@@ -1,5 +1,5 @@
 {
-  "name": "nextjs",
+  "name": "flash-squad-memo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -34,10 +34,12 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.21",
     "dotenv": "^17.2.2",
     "drizzle-kit": "^0.31.4",
-    "tailwindcss": "^4",
-    "tsx": "^4.20.5",
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.5.6", 
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }
