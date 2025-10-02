@@ -58,7 +58,7 @@ export default function LoginPage() {
       {/* UI Change: 增加圆角和阴影 */}
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
         <h2 className="text-3xl font-bold text-center text-gray-900">
-          团队登录
+          登录
         </h2>
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
@@ -66,7 +66,7 @@ export default function LoginPage() {
               htmlFor="teamName"
               className="block text-sm font-medium text-gray-700"
             >
-              团队名称
+              比赛名称
             </label>
             <input
               id="teamName"
@@ -77,7 +77,7 @@ export default function LoginPage() {
               onChange={(e) => setTeamName(e.target.value)}
               // UI Change: 增加圆角、调整边框和文字颜色
               className="block w-full px-4 py-3 mt-1 text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="例如：雷火队"
+              placeholder="例如：控烟"
             />
           </div>
 
@@ -86,7 +86,7 @@ export default function LoginPage() {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
-              团队密码
+              密码
             </label>
             <input
               id="password"
@@ -97,7 +97,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               // UI Change: 统一输入框样式
               className="block w-full px-4 py-3 mt-1 text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="例如：password123"
+              placeholder="例如：123"
             />
           </div>
 

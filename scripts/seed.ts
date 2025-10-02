@@ -4,108 +4,123 @@ import { teams, members, questionBanks, questions, memberQuestionProgress } from
 import bcrypt from 'bcryptjs';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
+import fs from 'fs';
+import path from 'path';
 
+// --- 类型定义 (与之前相同) ---
+type TeamSeed = {
+  name: string;
+  password: string;
+};
+
+type QuestionBankSeed = {
+  key: string;
+  name: string;
+  description: string;
+};
+
+type QuestionSeed = {
+  bankKey: string;
+  content: string;
+  answer: string;
+};
+
+// --- 数据库连接 (与之前相同) ---
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is not set in environment variables.");
 }
-
 const sql = neon(databaseUrl);
 const dbForSeed = drizzle(sql);
 
-
+// --- 主函数 ---
 async function main() {
-  console.log('Seeding started...');
+  console.log('🌱 Seeding started...');
 
-  // -------------------- 1. 清空所有表 (顺序很重要，从依赖别人的表开始) --------------------
-  console.log('Clearing existing data...');
+  // --- 1. 读取 JSON 数据文件 ---
+  console.log('⏳ Reading data from JSON files...');
+  const teamsData: TeamSeed[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/teams.json'), 'utf-8'));
+  const banksData: QuestionBankSeed[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/questionBanks.json'), 'utf-8'));
+  const questionsData: QuestionSeed[] = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/questions.json'), 'utf-8'));
+  console.log(`✅ Found ${teamsData.length} teams, ${banksData.length} question banks, and ${questionsData.length} questions.`);
+
+
+  // --- 2. 清空所有表 ---
+  console.log('🗑️  Clearing existing data...');
   await dbForSeed.delete(memberQuestionProgress);
   await dbForSeed.delete(questions);
   await dbForSeed.delete(members);
   await dbForSeed.delete(questionBanks);
   await dbForSeed.delete(teams);
-  console.log('Data cleared.');
+  console.log('✅ Data cleared.');
 
-  // -------------------- 2. 创建一个测试团队 --------------------
-  const teamPassword = 'password123';
-  const hashedPassword = await bcrypt.hash(teamPassword, 10);
+  // --- 3. 插入题库 ---
+  console.log('📚 Inserting question banks...');
+  // [FIX]: 关键修复！Map 的值类型必须是 string，因为 ID 是 UUID
+  const bankKeyToIdMap = new Map<string, string>();
   
-  const [createdTeam] = await dbForSeed.insert(teams).values({
-    name: '雷火队',
-    passwordHash: hashedPassword,
-  }).returning();
+  const createdBanks = await dbForSeed.insert(questionBanks).values(
+    banksData.map(b => ({ name: b.name, description: b.description }))
+  ).returning();
+  
+  // .returning() 返回的 createdBanks[i].id 是一个 UUID 字符串
+  for (let i = 0; i < banksData.length; i++) {
+    bankKeyToIdMap.set(banksData[i].key, createdBanks[i].id);
+  }
+  console.log(`✅ Created ${createdBanks.length} question banks.`);
 
-  console.log(`Created team: ${createdTeam.name} (password: ${teamPassword})`);
+  // --- 4. 插入题目 ---
+  console.log('❓ Inserting questions...');
+  const questionsToInsert = questionsData.map(q => {
+    // [FIX]: bankId 现在正确地从 Map 中获取为 string 类型
+    const bankId = bankKeyToIdMap.get(q.bankKey);
+    if (!bankId) {
+      throw new Error(`Invalid bankKey "${q.bankKey}" found in questions.json.`);
+    }
+    return {
+      questionBankId: bankId, // 类型完全匹配，无需转换
+      content: q.content,
+      answer: q.answer,
+    };
+  });
 
-  // -------------------- 3. 创建三个题库 --------------------
-  const [bankA, bankB, bankC] = await dbForSeed.insert(questionBanks).values([
-    { name: '题库A (历史文化)', description: '关于中国历史和文化的题目' },
-    { name: '题库B (科学技术)', description: '涵盖物理、化学、生物等科技知识' },
-    { name: '题库C (文学艺术)', description: '涉及中外文学名著和艺术常识' },
-  ]).returning();
+  if (questionsToInsert.length > 0) {
+    await dbForSeed.insert(questions).values(questionsToInsert);
+    console.log(`✅ Inserted ${questionsToInsert.length} questions.`);
+  }
 
-  console.log('Created 3 question banks.');
+  // --- 5. 插入团队和成员 ---
+  console.log('👥 Inserting teams and members...');
+  for (const team of teamsData) {
+    const hashedPassword = await bcrypt.hash(team.password, 10);
+    const [createdTeam] = await dbForSeed.insert(teams).values({
+      name: team.name,
+      passwordHash: hashedPassword,
+    }).returning(); // createdTeam.id 是一个 UUID 字符串
 
-  // -------------------- 4. 为每个题库创建一些示例题目 --------------------
-  await dbForSeed.insert(questions).values([
-    // 题库A的题目
-    { questionBankId: bankA.id, content: '唐朝的开国皇帝是谁？', answer: '李渊' },
-    { questionBankId: bankA.id, content: '《清明上河图》描绘的是哪个朝代的都城景象？', answer: '北宋' },
-    // 题库B的题目
-    { questionBankId: bankB.id, content: '水的化学式是什么？', answer: 'H₂O' },
-    { questionBankId: bankB.id, content: '地球上最坚硬的天然物质是什么？', answer: '钻石' },
-    // 题库C的题目
-    { questionBankId: bankC.id, content: '《百年孤独》的作者是谁？', answer: '加夫列尔·加西亚·马尔克斯' },
-    { questionBankId: bankC.id, content: '名画《蒙娜丽莎》是谁的作品？', answer: '列奥纳多·达·芬奇' },
-  ]);
+    console.log(`⏳ Creating members for team: ${createdTeam.name}...`);
 
-  console.log('Created sample questions for each bank.');
-
-  // -------------------- 5. 创建三个“席位/成员”，并分别与团队和题库关联 --------------------
-  const [member1, member2, member3] = await dbForSeed.insert(members).values([
-    {
+    const membersToInsert = createdBanks.map(bank => ({
+      // [FIX]: createdTeam.id 和 bank.id 都已经是正确的 string (uuid) 类型
       teamId: createdTeam.id,
-      assignedQuestionBankId: bankA.id,
-      name: `席位-${bankA.name}`,
-    },
-    {
-      teamId: createdTeam.id,
-      assignedQuestionBankId: bankB.id,
-      name: `席位-${bankB.name}`,
-    },
-    {
-      teamId: createdTeam.id,
-      assignedQuestionBankId: bankC.id,
-      name: `席位-${bankC.name}`,
-    },
-  ]).returning();
+      assignedQuestionBankId: bank.id,
+      name: `席位-${bank.name}`,
+    }));
 
-  console.log('Created 3 member seats and linked them to the team and banks.');
-
-  // -------------------- 6. (可选) 为每个成员预生成进度记录 --------------------
-  const allQuestions = await dbForSeed.select().from(questions);
-  // 明确定义 progressEntries 数组的类型，使其符合 memberQuestionProgress 表的插入要求
-  const progressEntries: (typeof memberQuestionProgress.$inferInsert)[] = [];
-
-  for (const q of allQuestions) {
-    if (q.questionBankId === bankA.id) {
-      progressEntries.push({ memberId: member1.id, questionId: q.id, status: 'unanswered' });
-    } else if (q.questionBankId === bankB.id) {
-      progressEntries.push({ memberId: member2.id, questionId: q.id, status: 'unanswered' });
-    } else if (q.questionBankId === bankC.id) {
-      progressEntries.push({ memberId: member3.id, questionId: q.id, status: 'unanswered' });
+    if(membersToInsert.length > 0) {
+        await dbForSeed.insert(members).values(membersToInsert);
+        console.log(`✅ Created ${membersToInsert.length} member seats for team ${createdTeam.name}.`);
     }
   }
 
-  if (progressEntries.length > 0) {
-    await dbForSeed.insert(memberQuestionProgress).values(progressEntries);
-    console.log('Pre-generated initial progress records for all members.');
-  }
-
-  console.log('Seeding finished successfully!');
+  // --- 6. (可选) 进度记录 ---
+  console.log('⏩ Skipping progress generation for now.');
+  
+  console.log('\n✨ Seeding finished successfully! ✨');
 }
 
 main().catch((err) => {
-  console.error('An error occurred during seeding:', err);
+  console.error('\n❌ An error occurred during seeding:');
+  console.error(err);
   process.exit(1);
 });

@@ -1,0 +1,32 @@
+[
+  {
+    "bankKey": "bank-a",
+    "content": "唐朝的开国皇帝是谁？",
+    "answer": "李渊"
+  },
+  {
+    "bankKey": "bank-a",
+    "content": "《清明上河图》描绘的是哪个朝代的都城景象？",
+    "answer": "北宋"
+  },
+  {
+    "bankKey": "bank-b",
+    "content": "水的化学式是什么？",
+    "answer": "H₂O"
+  },
+  {
+    "bankKey": "bank-b",
+    "content": "地球上最坚硬的天然物质是什么？",
+    "answer": "钻石"
+  },
+  {
+    "bankKey": "bank-c",
+    "content": "《百年孤独》的作者是谁？",
+    "answer": "加夫列尔·加西亚·马尔克斯"
+  },
+  {
+    "bankKey": "bank-c",
+    "content": "名画《蒙娜丽莎》是谁的作品？",
+    "answer": "列奥纳多·达·芬奇"
+  }
+]
