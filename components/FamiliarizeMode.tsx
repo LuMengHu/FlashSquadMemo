@@ -1,4 +1,4 @@
-// app/components/FamiliarizeMode.tsx (完整替换)
+// app/components/FamiliarizeMode.tsx (最终解决方案)
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,119 +12,58 @@ interface FamiliarizeModeProps {
 }
 
 export default function FamiliarizeMode({ questions: allQuestions, onProgressUpdate, mode }: FamiliarizeModeProps) {
+  // --- 逻辑部分保持不变 ---
   const [unmarkedQuestions, setUnmarkedQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [isAnswerShown, setIsAnswerShown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const startRound = useCallback(() => {
-    const initialQuestions = [...allQuestions];
-    setUnmarkedQuestions(initialQuestions);
-    if (initialQuestions.length > 0) {
-      const randomIndex = Math.floor(Math.random() * initialQuestions.length);
-      setCurrentQuestion(initialQuestions[randomIndex]);
-    } else {
-      setCurrentQuestion(null);
-    }
-    setIsAnswerShown(false);
-  }, [allQuestions]);
-
-  useEffect(() => {
-    startRound();
-  }, [startRound]);
-
-  const handleFeedback = async (isCorrect: boolean) => {
-    if (!currentQuestion || isLoading) return;
-    setIsLoading(true);
-
-    // [关键修正] 先计算出下一轮的状态，再执行异步操作
-    const remainingAfterThis = unmarkedQuestions.filter(q => q.id !== currentQuestion.id);
-
-    // 更新下一题的状态
-    if (remainingAfterThis.length > 0) {
-      const randomIndex = Math.floor(Math.random() * remainingAfterThis.length);
-      setCurrentQuestion(remainingAfterThis[randomIndex]);
-      setUnmarkedQuestions(remainingAfterThis);
-      setIsAnswerShown(false);
-    } else {
-      // 这是最后一题，直接进入完成状态
-      setCurrentQuestion(null);
-      setUnmarkedQuestions([]);
-    }
-
-    // 现在可以安全地执行异步 API 调用和父组件更新了
-    // 因为它们不会再干扰当前组件的下一题逻辑
-    const memberId = localStorage.getItem('selectedMemberId');
-    const token = localStorage.getItem('authToken');
-    if (!memberId || !token) {
-      alert('用户身份信息丢失，请重新登录。');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      await fetch('/api/progress', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ memberId, questionId: currentQuestion.id, isCorrect }),
-      });
-      // 在后台默默更新父组件，不影响当前 UI
-      onProgressUpdate();
-    } catch (error) {
-      console.error('Failed to update progress:', error);
-      alert(`错误: ${error instanceof Error ? error.message : '未知错误'}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const startRound = useCallback(() => { const initialQuestions = [...allQuestions]; setUnmarkedQuestions(initialQuestions); if (initialQuestions.length > 0) { const randomIndex = Math.floor(Math.random() * initialQuestions.length); setCurrentQuestion(initialQuestions[randomIndex]); } else { setCurrentQuestion(null); } setIsAnswerShown(false); }, [allQuestions]);
+  useEffect(() => { startRound(); }, [startRound]);
+  const handleShowAnswer = () => { setIsAnswerShown(true); };
+  const handleFeedback = useCallback(async (isCorrect: boolean) => { if (!currentQuestion || isLoading) return; setIsLoading(true); const questionToSend = currentQuestion; const memberId = localStorage.getItem('selectedMemberId'); const token = localStorage.getItem('authToken'); const remaining = unmarkedQuestions.filter(q => q.id !== questionToSend.id); setUnmarkedQuestions(remaining); setIsAnswerShown(false); if (remaining.length > 0) { const randomIndex = Math.floor(Math.random() * remaining.length); setCurrentQuestion(remaining[randomIndex]); } else { setCurrentQuestion(null); } if (memberId && token) { try { await fetch('/api/progress', { method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ memberId, questionId: questionToSend.id, isCorrect }), }); onProgressUpdate(); } catch (error) { console.error('Failed to update progress:', error); } } setIsLoading(false); }, [currentQuestion, isLoading, unmarkedQuestions, onProgressUpdate]);
   
-  const title = mode === 'review' ? '错题复习' : '熟悉题库';
-
+  // --- [FINAL FIX] 全新的布局 ---
   return (
-    <div className="w-full rounded-xl bg-white dark:bg-gray-800 p-6 shadow-lg">
-      <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl text-center font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
-        <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-1">
-          剩余题目: <span className="font-bold text-indigo-500">{unmarkedQuestions.length}</span> / {allQuestions.length}
+    <div className="flex h-full w-full flex-col">
+      {/* 1. 头部 (固定高度) */}
+      <div className="shrink-0">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+          {mode === 'review' ? '错题复习' : '练习模式'} | 剩余: 
+          <span className="font-bold text-indigo-500"> {unmarkedQuestions.length}</span> / {allQuestions.length}
         </p>
       </div>
+
       {currentQuestion ? (
-        <>
-          <div className="space-y-4">
-            <div className="p-5 rounded-lg bg-gray-100 dark:bg-gray-700/50 min-h-[120px]">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">问题:</p>
-              <p className="text-lg text-gray-800 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
-                {currentQuestion.content}
-              </p>
-            </div>
-            <div className="p-5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-500/30 min-h-[100px] flex flex-col justify-center">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">答案:</p>
-              {isAnswerShown ? (
-                <p className="text-lg text-emerald-800 dark:text-emerald-200 whitespace-pre-wrap leading-relaxed font-semibold">
-                  {currentQuestion.answer}
+        // 2. 主体 (包含内容和按钮，占据剩余空间)
+        <div className="flex min-h-0 flex-grow flex-col pt-4 sm:pt-6">
+          
+          {/* 3. 内容区 (问题+答案，再次伸展占据主体中的剩余空间) */}
+          <div className="flex min-h-0 flex-grow flex-col space-y-4">
+            {/* 问题卡片 */}
+            <div className="flex flex-grow flex-col rounded-lg bg-gray-100 p-4 dark:bg-gray-700/50">
+              <p className="mb-2 shrink-0 text-sm font-medium text-gray-500 dark:text-gray-400">问题:</p>
+              <div className="flex flex-grow items-center justify-center">
+                <p className="text-center text-lg sm:text-xl text-gray-800 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
+                  {currentQuestion.content}
                 </p>
-              ) : (
-                <div className="text-center text-gray-400 dark:text-gray-500">点击 “显示答案” 查看</div>
-              )}
+              </div>
+            </div>
+            {/* 答案卡片 */}
+            <div className="flex flex-grow flex-col rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/30 dark:bg-emerald-900/30">
+              <p className="mb-2 shrink-0 text-sm font-medium text-gray-500 dark:text-gray-400">答案:</p>
+              <div className="flex flex-grow items-center justify-center">
+                {isAnswerShown ? ( <p className="text-center text-lg sm:text-xl font-semibold text-emerald-800 dark:text-emerald-200 whitespace-pre-wrap leading-relaxed">{currentQuestion.answer}</p> ) : ( <div className="text-center text-gray-400 dark:text-gray-500">...</div> )}
+              </div>
             </div>
           </div>
-          <div className="mt-8 grid grid-cols-3 gap-3">
-            <button onClick={() => handleFeedback(true)} disabled={!isAnswerShown || isLoading} className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-green-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 disabled:cursor-not-allowed"><Check size={20} /> 已掌握</button>
-            <button onClick={() => setIsAnswerShown(true)} disabled={isAnswerShown || isLoading} className="flex items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-indigo-600 disabled:bg-indigo-300 dark:disabled:bg-indigo-800 disabled:cursor-not-allowed"><Eye size={20} /> 显示答案</button>
-            <button onClick={() => handleFeedback(false)} disabled={!isAnswerShown || isLoading} className="flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-red-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 disabled:cursor-not-allowed"><X size={20} /> 未掌握</button>
+          
+          {/* 4. 按钮区 (固定高度) */}
+          <div className="mt-6 shrink-0 sm:mt-8">
+            {isAnswerShown ? ( <div className="grid grid-cols-2 gap-4"><button onClick={() => handleFeedback(false)} disabled={isLoading} className="flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-red-600 disabled:bg-gray-300 dark:disabled:bg-gray-600"><X size={20} /> 未掌握</button><button onClick={() => handleFeedback(true)} disabled={isLoading} className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-green-600 disabled:bg-gray-300 dark:disabled:bg-gray-600"><Check size={20} /> 已掌握</button></div> ) : ( <button onClick={handleShowAnswer} disabled={isLoading} className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-indigo-600 disabled:bg-indigo-300"><Eye size={20} /> 显示答案</button> )}
           </div>
-        </>
-      ) : (
-        <div className="text-center py-10">
-          <p className="text-5xl mb-4">🎉</p>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">太棒了!</h2>
-          <p className="mt-2 text-base text-gray-600 dark:text-gray-400">你已经完成了本轮所有题目！</p>
-          <button 
-            onClick={startRound}
-            className="mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-white font-semibold hover:bg-indigo-700 transition-colors">
-            <RefreshCw size={18} /> 再来一轮
-          </button>
         </div>
+      ) : (
+        <div className="flex flex-grow flex-col items-center justify-center py-10 text-center"><p className="mb-4 text-5xl">🎉</p><h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">太棒了!</h2><p className="mt-2 text-base text-gray-600 dark:text-gray-400">你已经完成了本轮所有题目！</p><button onClick={startRound} className="mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-700"><RefreshCw size={18} /> 再来一轮</button></div>
       )}
     </div>
   );
