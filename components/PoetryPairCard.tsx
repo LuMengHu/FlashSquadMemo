@@ -12,8 +12,8 @@ interface PoetryPairCardProps {
 
 export default function PoetryPairCard({ question, isAnswerVisible, isContentPrompt }: PoetryPairCardProps) {
   // [核心修正] 不再自己计算随机，而是直接使用父组件的决定
-  const promptLine = isContentPrompt ? question.content : question.answer;
-  const answerLine = isContentPrompt ? question.answer : question.content;
+  const promptLine = isContentPrompt ? question.question : question.answer;
+  const answerLine = isContentPrompt ? question.answer : question.question;
   const promptLabel = isContentPrompt ? '上句' : '下句';
   const answerLabel = isContentPrompt ? '下句' : '上句';
   

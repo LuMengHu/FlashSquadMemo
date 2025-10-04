@@ -50,7 +50,7 @@ export default function SelectSeatPage() {
             </h1>
           </div>
           <p className="mt-3 text-md text-gray-500 dark:text-gray-400">
-            请选择你的学习席位，开始高效背题
+            请选择你的题库，开始高效背题
           </p>
         </div>
 

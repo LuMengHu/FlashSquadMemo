@@ -47,7 +47,7 @@ export default function FamiliarizeMode({ questions: allQuestions, onProgressUpd
               <p className="mb-2 shrink-0 text-sm font-medium text-gray-500 dark:text-gray-400">问题:</p>
               <div className="flex flex-grow items-center justify-center">
                 <p className="text-center text-lg sm:text-xl text-gray-800 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
-                  {currentQuestion.content}
+                  {currentQuestion.question}
                 </p>
               </div>
             </div>

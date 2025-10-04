@@ -1,12 +1,17 @@
 [
   {
-    "key": "team-smoke-control",
+    "key": "smoke",
     "name": "控烟",
     "password": "123"
   },
   {
-    "key": "team-sc-control",
+    "key": "poetry",
     "name": "诗词",
+    "password": "123"
+  },
+  {
+    "key": "knowledge",
+    "name": "常识",
     "password": "123"
   }
 ]

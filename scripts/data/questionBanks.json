@@ -1,28 +1,60 @@
 
 [
   {
-    "teamKey": "team-smoke-control",
-    "key": "bank-smoke-control-1",
-    "name": "控烟题库 (1-200)",
-    "description": "胡骏韬"
+    "teamKey": "smoke",
+    "key": "smoke1",
+    "name": "控烟题库 (胡骏韬)",
+    "description": "1-200"
   },
   {
-    "teamKey": "team-smoke-control",
-    "key": "bank-smoke-control-2",
-    "name": "控烟题库 (200-400)",
-    "description": "霍慧栭"
+    "teamKey": "smoke",
+    "key": "smoke2",
+    "name": "控烟题库 (霍慧栭)",
+    "description": "200-400"
   },
   {
-    "teamKey": "team-smoke-control",
-    "key": "bank-smoke-control-3",
-    "name": "控烟题库 (400-600)",
-    "description": "侯佳怡"
+    "teamKey": "smoke",
+    "key": "smoke3",
+    "name": "控烟题库 (侯佳怡)",
+    "description": "400-600"
   },
   {
-    "teamKey": "team-sc-control",
-    "key": "bank-poetry-familiarize",
-    "name": "诗词配对练习",
-    "description": "诗词上下句配对练习。",
+    "teamKey": "knowledge",
+    "key": "knowledge1",
+    "name": "滙业题库 (胡骏韬)",
+    "description": "数学，历史，AI"
+  },
+  {
+    "teamKey": "knowledge",
+    "key": "knowledge2",
+    "name": "滙业题库 (麦銦栭)",
+    "description": "英文，化学，生物"
+  },
+  {
+    "teamKey": "knowledge",
+    "key": "knowledge3",
+    "name": "滙业题库 (丁晓峰)",
+    "description": "中文，物理，地理"
+  },
+  {
+    "teamKey": "poetry",
+    "key": "poetry1",
+    "name": "诗词题库 ()",
+    "description": "",
+    "mode": "poetry-pair"
+  },
+  {
+    "teamKey": "poetry",
+    "key": "poetry1",
+    "name": "诗词题库 ()",
+    "description": "",
+    "mode": "poetry-pair"
+  },
+  {
+    "teamKey": "poetry",
+    "key": "poetry1",
+    "name": "诗词题库 ()",
+    "description": "",
     "mode": "poetry-pair"
   }
 ]
