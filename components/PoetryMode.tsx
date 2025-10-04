@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Question } from '@/types/question';
 import { Check, X, Eye, RefreshCw } from 'lucide-react';
-import PoetryPairCard from '@/components/PoetryPairCard'; // 使用别名路径
+import PoetryPairCard from '@/components/PoetryPairCard';
 
 interface PoetryModeProps {
   questions: Question[];
@@ -16,16 +16,12 @@ export default function PoetryMode({ questions: allQuestions, onProgressUpdate, 
   const [unmarkedQuestions, setUnmarkedQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [isAnswerShown, setIsAnswerShown] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  // [核心修正] 将随机化状态提升到父组件
   const [isContentThePrompt, setIsContentThePrompt] = useState(true);
 
-  // 封装一个函数来处理显示下一题的逻辑
   const showNextQuestion = useCallback((questionsToShow: Question[]) => {
     if (questionsToShow.length > 0) {
       const randomIndex = Math.floor(Math.random() * questionsToShow.length);
       setCurrentQuestion(questionsToShow[randomIndex]);
-      // 在题目切换时，决定本次的出题方式
       setIsContentThePrompt(Math.random() < 0.5);
     } else {
       setCurrentQuestion(null);
@@ -43,61 +39,56 @@ export default function PoetryMode({ questions: allQuestions, onProgressUpdate, 
   
   const handleShowAnswer = () => { setIsAnswerShown(true); };
 
-  const handleFeedback = useCallback(async (isCorrect: boolean) => {
-    if (!currentQuestion || isLoading) return;
-    setIsLoading(true);
-
+  // [核心修正] 采用“乐观 UI”模式重构 handleFeedback
+  const handleFeedback = useCallback((isCorrect: boolean) => {
+    if (!currentQuestion) return;
+    
     const questionToSend = currentQuestion;
+
+    // 1. 立即更新 UI
     const remaining = unmarkedQuestions.filter(q => q.id !== questionToSend.id);
     setUnmarkedQuestions(remaining);
-    
-    // 立即显示下一题
     showNextQuestion(remaining);
 
+    // 2. 在后台发送 API 请求
     const memberId = localStorage.getItem('selectedMemberId');
     const token = localStorage.getItem('authToken');
     if (memberId && token) {
-      try {
-        await fetch('/api/progress', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ memberId, questionId: questionToSend.id, isCorrect }),
-        });
-        onProgressUpdate();
-      } catch (error) { console.error('Failed to update progress:', error); }
+      fetch('/api/progress', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ memberId, questionId: questionToSend.id, isCorrect }),
+      })
+      .then(response => {
+        if (response.ok) {
+          onProgressUpdate();
+        } else {
+          console.error('Failed to update poetry progress on server');
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error for poetry /api/progress:', error);
+      });
     }
-    setIsLoading(false);
-  }, [currentQuestion, isLoading, unmarkedQuestions, onProgressUpdate, showNextQuestion]);
+  }, [currentQuestion, unmarkedQuestions, onProgressUpdate, showNextQuestion]);
   
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="shrink-0">
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          {mode === 'review' ? '诗词回顾' : '诗词配对'} | 剩余: 
-          <span className="font-bold text-indigo-500"> {unmarkedQuestions.length}</span> / {allQuestions.length}
-        </p>
-      </div>
-
+      <div className="shrink-0"><p className="text-center text-sm text-gray-500 dark:text-gray-400">{mode === 'review' ? '诗词回顾' : '诗词配对'} | 剩余: <span className="font-bold text-indigo-500"> {unmarkedQuestions.length}</span> / {allQuestions.length}</p></div>
       {currentQuestion ? (
         <div className="flex min-h-0 flex-grow flex-col pt-4 sm:pt-6">
           <div className="flex min-h-0 flex-grow flex-col">
-            {/* 将随机结果作为 prop 传递下去 */}
-            <PoetryPairCard 
-              question={currentQuestion} 
-              isAnswerVisible={isAnswerShown}
-              isContentPrompt={isContentThePrompt} 
-            />
+            <PoetryPairCard question={currentQuestion} isAnswerVisible={isAnswerShown} isContentPrompt={isContentThePrompt} />
           </div>
           <div className="mt-6 shrink-0 sm:mt-8">
             {isAnswerShown ? (
               <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => handleFeedback(false)} disabled={isLoading} className="flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-red-600 disabled:bg-gray-300 dark:disabled:bg-gray-600"><X size={20} /> 未记熟</button>
-                <button onClick={() => handleFeedback(true)} disabled={isLoading} className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-green-600 disabled:bg-gray-300 dark:disabled:bg-gray-600"><Check size={20} /> 已记熟</button>
+                {/* [核心修正] 移除 disabled={isLoading} */}
+                <button onClick={() => handleFeedback(false)} className="flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-red-600"><X size={20} /> 未记熟</button>
+                <button onClick={() => handleFeedback(true)} className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-3 text-white font-semibold shadow-sm transition-all hover:bg-green-600"><Check size={20} /> 已记熟</button>
               </div>
             ) : (
-              <button onClick={handleShowAnswer} disabled={isAnswerShown} className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-indigo-600 disabled:bg-indigo-300">
-                <Eye size={20} /> 显示下句/上句
-              </button>
+              <button onClick={handleShowAnswer} disabled={isAnswerShown} className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-3 font-semibold text-white shadow-sm transition-all hover:bg-indigo-600"><Eye size={20} /> 显示下句/上句</button>
             )}
           </div>
         </div>
