@@ -25,11 +25,11 @@ export default function SelectSeatPage() {
         setSeats(JSON.parse(storedSeats));
       } catch (error) {
         console.error('Failed to parse seats from localStorage', error);
-        router.push('/team/login');
+        router.push('login');
       }
     } else {
       console.log('No seat info found, redirecting to login.');
-      router.push('/team/login');
+      router.push('login');
     }
   }, [router]);
 

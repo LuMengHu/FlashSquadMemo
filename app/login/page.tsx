@@ -17,7 +17,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/auth/team/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teamName, password }),
@@ -27,7 +27,7 @@ export default function LoginPage() {
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('teamInfo', JSON.stringify({ id: data.team.id, name: data.team.name }));
       localStorage.setItem('memberSeats', JSON.stringify(data.members));
-      router.push('/team/select-seat');
+      router.push('select-seat');
     } catch (err) {
       setError(err instanceof Error ? err.message : '发生未知错误');
     } finally {

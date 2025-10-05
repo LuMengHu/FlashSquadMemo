@@ -43,7 +43,7 @@ export const questionBanks = pgTable('QuestionBanks', {
 运行以下命令，Drizzle Kit 会自动比较你的 Schema 和数据库的当前状态，并生成一个 SQL 迁移文件。
 
 ```bash
-pnpm drizzle-kit generate
+npx drizzle-kit generate
 ```
 
 - **预期输出**: 终端会提示 `✔ Migration generated successfully!`。
@@ -54,10 +54,9 @@ pnpm drizzle-kit generate
 运行以下命令，将上一步生成的 SQL 文件应用到你的 Neon 数据库。
 
 ```bash
-pnpm drizzle-kit push
+npx drizzle-kit push
 ```
 
 - **预期输出**: 终端会提示 `✔ Schema pushed successfully!`。
 - **验证**: 登录 Neon 控制台，检查对应的表结构，你会发现新的字段已经被成功添加。
-  
 

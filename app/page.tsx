@@ -12,9 +12,9 @@ export default function HomePage() {
     // 逻辑保持不变
     const token = localStorage.getItem('authToken'); 
     if (token) {
-      router.replace('/team/select-seat'); 
+      router.replace('select-seat'); 
     } else {
-      router.replace('/team/login');
+      router.replace('login');
     }
   }, [router]);
 

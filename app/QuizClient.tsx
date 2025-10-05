@@ -35,8 +35,8 @@ export default function QuizClient({ quizId }: { quizId: string }) {
     }
     try {
       const [allRes, reviewRes] = await Promise.all([
-        fetch(`/api/get-questions/${quizId}?memberId=${memberId}&mode=all`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`/api/get-questions/${quizId}?memberId=${memberId}&mode=review`, { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`/api/questions/${quizId}?memberId=${memberId}&mode=all`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`/api/questions/${quizId}?memberId=${memberId}&mode=review`, { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       if (!allRes.ok || !reviewRes.ok) {
         const errorData = !allRes.ok ? await allRes.json() : await reviewRes.json();
@@ -62,7 +62,7 @@ export default function QuizClient({ quizId }: { quizId: string }) {
     const token = localStorage.getItem('authToken');
     const memberId = localStorage.getItem('selectedMemberId');
     if (!token || !memberId) return;
-    fetch(`/api/get-questions/${quizId}?memberId=${memberId}&mode=review`, { 
+    fetch(`/api/questions/${quizId}?memberId=${memberId}&mode=review`, { 
       headers: { 'Authorization': `Bearer ${token}` } 
     })
       .then(res => res.json())
@@ -99,7 +99,7 @@ export default function QuizClient({ quizId }: { quizId: string }) {
   return (
     <div className="h-[100dvh] w-full bg-gray-50 p-4 dark:bg-gray-900 flex flex-col sm:items-center sm:justify-center">
       <button 
-        onClick={() => router.push('/team/select-seat')} 
+        onClick={() => router.push('../select-seat')} 
         className="fixed top-4 left-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-700 dark:text-gray-200 shadow-lg transition-transform hover:scale-110 sm:h-12 sm:w-12 sm:top-6 sm:left-6" 
         aria-label="返回席位选择">
         <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7" />

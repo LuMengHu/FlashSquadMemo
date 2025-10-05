@@ -7,11 +7,14 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
 import fs from 'fs';
 import path from 'path';
+import { config } from 'dotenv'; // 1. 导入 config 函数
 
 // 类型定义
 type TeamSeed = { key: string; name: string; password: string; };
 type QuestionBankSeed = { teamKey: string; key: string; name: string; description: string; mode?: 'standard' | 'poetry-pair'; };
 type QuestionSeed = { content: string; answer: string; metadata?: Record<string, any>; bankKey?: string; };
+
+config({ path: path.resolve(__dirname, '..', '.env') });
 
 // 数据库连接
 const databaseUrl = process.env.DATABASE_URL;
