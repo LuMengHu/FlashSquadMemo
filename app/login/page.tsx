@@ -66,7 +66,7 @@ export default function LoginPage() {
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
                 className="block w-full px-4 py-3 mt-1 text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="例如：控烟"
+                placeholder="例如：镜平"
               />
             </div>
 
