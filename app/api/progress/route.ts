@@ -1,4 +1,4 @@
-// app/api/progress/route.ts (完整替换)
+// app/api/progress/route.ts 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { memberQuestionProgress } from '@/lib/schema';

@@ -1,4 +1,4 @@
-// app/team/login/page.tsx (完整替换)
+//app/login/page.tsx
 'use client';
 
 import { useState } from 'react';

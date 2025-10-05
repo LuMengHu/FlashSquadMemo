@@ -1,4 +1,4 @@
-// app/team/select-seat/page.tsx (完整替换)
+// app/select-seat/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';

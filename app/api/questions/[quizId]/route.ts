@@ -1,4 +1,4 @@
-// app/api/get-questions/[quizId]/route.ts (最终解决方案)
+// app/api/questions/[quizId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { questionBanks, questions, memberQuestionProgress } from '@/lib/schema';
